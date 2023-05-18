@@ -12,28 +12,13 @@ struct message_record {
     enum class field_type {
         ALPHA = 0,
         INTEGER = 1,
-        CHAR = 3,
-        PRICE4 = 4,
-        PRICE8 = 5,
+        PRICE4 = 2,
+        PRICE8 = 3,
     };
     uint8_t offset = 0;
     uint8_t length = 0;
     field_type type;
 };
-
-template <typename T>
-T swap_endian(T u)
-{
-    static_assert(CHAR_BIT==8, "CHAR_BIT != 8");
-    union {
-        T u;
-        unsigned char u8[sizeof(T)];
-    } source, dest;
-    source.u = u;
-    for(size_t k = 0; k < sizeof(T); k++)
-        dest.u8[k] = source.u8[sizeof(T) - k - 1];
-    return dest.u;
-}
 
 template <const int NUM_BYTES>
 std::shared_ptr<char[]> swap_endian_bytes(const void* in)
@@ -119,7 +104,7 @@ struct message {
 
 const static int8_t SYSTEM_EVENT_LEN = 12;
 struct system_event : public message<SYSTEM_EVENT_LEN> {
-    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR};
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::ALPHA};
     static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::INTEGER};
     static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
     static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
@@ -131,7 +116,7 @@ struct system_event : public message<SYSTEM_EVENT_LEN> {
 
 const static int8_t STOCK_DIRECTORY_LEN = 39;
 struct stock_directory : public message<STOCK_DIRECTORY_LEN> {
-    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR};
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::ALPHA};
     static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::INTEGER};
     static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
     static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
@@ -155,7 +140,7 @@ struct stock_directory : public message<STOCK_DIRECTORY_LEN> {
 
 const static int8_t STOCK_TRADING_ACTION_LEN = 25;
 struct stock_trading_action : public message<STOCK_TRADING_ACTION_LEN> {
-    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR};
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::ALPHA};
     static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::INTEGER};
     static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
     static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
@@ -170,7 +155,7 @@ struct stock_trading_action : public message<STOCK_TRADING_ACTION_LEN> {
 
 const static int8_t REG_SHO_RESTRICTION_LEN = 20;
 struct reg_sho_restriction : public message<REG_SHO_RESTRICTION_LEN> {
-    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR};
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::ALPHA};
     static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::INTEGER};
     static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
     static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
@@ -183,7 +168,7 @@ struct reg_sho_restriction : public message<REG_SHO_RESTRICTION_LEN> {
 
 const static int8_t MARKET_PARTICIPANT_POSITION_LEN = 26;
 struct market_participant_position : public message<MARKET_PARTICIPANT_POSITION_LEN> { 
-    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::ALPHA}; 
     static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::INTEGER};
     static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
     static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
@@ -199,8 +184,8 @@ struct market_participant_position : public message<MARKET_PARTICIPANT_POSITION_
 
 const static int8_t MWCP_DECLINE_LEVEL_LEN = 35;
 struct mwcp_decline_level : public message<MWCP_DECLINE_LEVEL_LEN> {
-    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
-    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::ALPHA}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::ALPHA}; 
     static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
     static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
     static constexpr message_record LEVEL_1{11, 8, message_record::field_type::PRICE8};
@@ -213,8 +198,8 @@ struct mwcp_decline_level : public message<MWCP_DECLINE_LEVEL_LEN> {
 
 const static int8_t MWCP_STATUS_LEN = 12;
 struct mwcp_status : public message<MWCP_STATUS_LEN> {
-    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
-    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::ALPHA}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::ALPHA}; 
     static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
     static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
     static constexpr message_record BREACHED_LEVEL{11, 1, message_record::field_type::ALPHA};
@@ -225,8 +210,8 @@ struct mwcp_status : public message<MWCP_STATUS_LEN> {
 
 const static int8_t IPO_QUOTING_PERIOD_UPDATE_LEN = 28;
 struct ipo_quoting_period_update : public message<IPO_QUOTING_PERIOD_UPDATE_LEN> {
-    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
-    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::ALPHA}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::ALPHA}; 
     static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
     static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
     static constexpr message_record STOCK{11, 8, message_record::field_type::ALPHA};
@@ -240,8 +225,8 @@ struct ipo_quoting_period_update : public message<IPO_QUOTING_PERIOD_UPDATE_LEN>
     
 const static int8_t LULD_AUCTION_COLLAR_LEN = 35;
 struct luld_auction_collar : public message<LULD_AUCTION_COLLAR_LEN> {
-    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
-    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::ALPHA}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::ALPHA}; 
     static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
     static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
     static constexpr message_record STOCK{11, 8, message_record::field_type::ALPHA};
@@ -256,8 +241,8 @@ struct luld_auction_collar : public message<LULD_AUCTION_COLLAR_LEN> {
 
 const static int8_t OPERATIONAL_HALT_LEN = 21;
 struct operational_halt : public message<OPERATIONAL_HALT_LEN> {
-    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
-    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::ALPHA}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::ALPHA}; 
     static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
     static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
     static constexpr message_record STOCK{11, 8, message_record::field_type::ALPHA};
@@ -270,8 +255,8 @@ struct operational_halt : public message<OPERATIONAL_HALT_LEN> {
 
 const static int8_t ADD_ORDER_LEN = 36;
 struct add_order : public message<ADD_ORDER_LEN> {
-    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
-    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::ALPHA}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::ALPHA}; 
     static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
     static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
     static constexpr message_record ORDER_REFERENCE_NUMBER{11, 8, message_record::field_type::INTEGER};
@@ -286,8 +271,8 @@ struct add_order : public message<ADD_ORDER_LEN> {
 
 const static int8_t ADD_ORDER_WITH_MPID_LEN = 40;
 struct add_order_with_mpid : public message<ADD_ORDER_LEN> {
-    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
-    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::ALPHA}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::ALPHA}; 
     static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
     static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
     static constexpr message_record ORDER_REFERENCE_NUMBER{11, 8, message_record::field_type::INTEGER};
@@ -303,8 +288,8 @@ struct add_order_with_mpid : public message<ADD_ORDER_LEN> {
 
 const static int8_t ORDER_EXECUTED_LEN = 31;
 struct order_executed : public message<ORDER_EXECUTED_LEN> {
-    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
-    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::ALPHA}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::ALPHA}; 
     static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
     static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
     static constexpr message_record ORDER_REFERENCE_NUMBER{11, 8, message_record::field_type::INTEGER};
@@ -317,8 +302,8 @@ struct order_executed : public message<ORDER_EXECUTED_LEN> {
 
 const static int8_t ORDER_EXECUTED_WITH_PRICE_LEN = 36;
 struct order_executed_with_price : public message<ORDER_EXECUTED_WITH_PRICE_LEN> {
-    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
-    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::ALPHA}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::ALPHA}; 
     static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
     static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
     static constexpr message_record ORDER_REFERENCE_NUMBER{11, 8, message_record::field_type::INTEGER};
@@ -333,8 +318,8 @@ struct order_executed_with_price : public message<ORDER_EXECUTED_WITH_PRICE_LEN>
 
 const static int8_t ORDER_CANCEL_LEN = 23;
 struct order_cancel : public message<ORDER_CANCEL_LEN> {
-    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
-    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::ALPHA}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::ALPHA}; 
     static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
     static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
     static constexpr message_record ORDER_REFERENCE_NUMBER{11, 8, message_record::field_type::INTEGER};
@@ -346,8 +331,8 @@ struct order_cancel : public message<ORDER_CANCEL_LEN> {
 
 const static int8_t ORDER_DELETE_LEN = 19;
 struct order_delete : public message<ORDER_DELETE_LEN> {
-    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
-    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::ALPHA}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::ALPHA}; 
     static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
     static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
     static constexpr message_record ORDER_REFERENCE_NUMBER{11, 8, message_record::field_type::INTEGER};
@@ -358,8 +343,8 @@ struct order_delete : public message<ORDER_DELETE_LEN> {
 
 const static int8_t ORDER_REPLACE_LEN = 35;
 struct order_replace : public message<ORDER_REPLACE_LEN> {
-    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
-    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::ALPHA}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::ALPHA}; 
     static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
     static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
     static constexpr message_record ORIGINAL_ORDER_REFERENCE_NUMBER{11, 8, message_record::field_type::INTEGER};
@@ -373,8 +358,8 @@ struct order_replace : public message<ORDER_REPLACE_LEN> {
 
 const static int8_t TRADE_LEN = 35;
 struct trade : public message<TRADE_LEN> {
-    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
-    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::ALPHA}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::ALPHA}; 
     static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
     static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
     static constexpr message_record ORDER_REFERENCE_NUMBER{11, 8, message_record::field_type::INTEGER};
@@ -390,8 +375,8 @@ struct trade : public message<TRADE_LEN> {
 
 const static int8_t TRADE_NON_CROSS_LEN = 40;
 struct trade_non_cross : public message<TRADE_NON_CROSS_LEN> {
-    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
-    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::ALPHA}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::ALPHA}; 
     static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
     static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
     static constexpr message_record SHARES{11, 4, message_record::field_type::INTEGER};
@@ -406,8 +391,8 @@ struct trade_non_cross : public message<TRADE_NON_CROSS_LEN> {
 
 const static int8_t BROKEN_TRADE_LEN = 19;
 struct broken_trade : public message<BROKEN_TRADE_LEN> {
-    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
-    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::ALPHA}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::ALPHA}; 
     static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
     static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
     static constexpr message_record MATCH_NUMBER{11, 8, message_record::field_type::INTEGER};
@@ -418,8 +403,8 @@ struct broken_trade : public message<BROKEN_TRADE_LEN> {
 
 const static int8_t NOII_LEN = 19;
 struct noii : public message<NOII_LEN> {
-    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
-    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::ALPHA}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::ALPHA}; 
     static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
     static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
     static constexpr message_record PAIRED_SHARES{11, 8, message_record::field_type::INTEGER};
@@ -438,8 +423,8 @@ struct noii : public message<NOII_LEN> {
 
 const static int8_t RPII_LEN = 20;
 struct rpii : public message<RPII_LEN> {
-    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
-    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::ALPHA}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::ALPHA}; 
     static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
     static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
     static constexpr message_record STOCK{11, 8, message_record::field_type::ALPHA};
@@ -452,8 +437,8 @@ struct rpii : public message<RPII_LEN> {
 const static int8_t DIRECT_LISTING_WITH_CAPITAL_RAISE_PRICE_DISCOVERY_LEN = 48;
 struct direct_listing_with_capital_raise_price_discovery : 
         public message<DIRECT_LISTING_WITH_CAPITAL_RAISE_PRICE_DISCOVERY_LEN> {
-    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
-    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::ALPHA}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::ALPHA}; 
     static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
     static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
     static constexpr message_record STOCK{11, 8, message_record::field_type::ALPHA};
