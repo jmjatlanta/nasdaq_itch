@@ -8,13 +8,13 @@
 namespace itch
 {
 
-
 struct message_record {
     enum class field_type {
         ALPHA = 0,
         INTEGER = 1,
         CHAR = 3,
-        PRICE8 = 4,
+        PRICE4 = 4,
+        PRICE8 = 5,
     };
     uint8_t offset = 0;
     uint8_t length = 0;
@@ -107,7 +107,8 @@ struct message {
     const std::string get_string(const message_record& mr)
     {
         // get the section of the record we want
-        char buf[mr.length+1] = {0};
+        char buf[mr.length+1];
+        memset(buf, 0, mr.length+1);
         strncpy(buf, &record[mr.offset], mr.length);
         return buf;
     }
@@ -220,6 +221,84 @@ struct mwcp_status : public message<MWCP_STATUS_LEN> {
 
     mwcp_status() : message('W') {}
     mwcp_status(const char* in) : message(in) {}
+};
+
+const static int8_t IPO_QUOTING_PERIOD_UPDATE_LEN = 28;
+struct ipo_quoting_period_update : public message<IPO_QUOTING_PERIOD_UPDATE_LEN> {
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
+    static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
+    static constexpr message_record STOCK{11, 8, message_record::field_type::ALPHA};
+    static constexpr message_record IPO_QUOTATION_RELEASE_TIME{19, 4, message_record::field_type::INTEGER};
+    static constexpr message_record IPO_QUOTATION_RELEASE_QUALIFIER{23, 1, message_record::field_type::ALPHA};
+    static constexpr message_record IPO_PRICE{24, 4, message_record::field_type::PRICE4};
+
+    ipo_quoting_period_update() : message('K') {}
+    ipo_quoting_period_update(const char* in) : message(in) {}
+};
+    
+const static int8_t LULD_AUCTION_COLLAR_LEN = 35;
+struct luld_auction_collar : public message<LULD_AUCTION_COLLAR_LEN> {
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
+    static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
+    static constexpr message_record STOCK{11, 8, message_record::field_type::ALPHA};
+    static constexpr message_record AUCTION_COLLAR_REFERENCE_PRICE{19, 4, message_record::field_type::PRICE4};
+    static constexpr message_record UPPER_AUCTION_COLLAR_PRICE{23, 4, message_record::field_type::PRICE4};
+    static constexpr message_record LOWER_AUCTION_COLLAR_PRICE{27, 4, message_record::field_type::PRICE4};
+    static constexpr message_record AUCTION_COLLAR_EXTENSION{31, 4, message_record::field_type::INTEGER};
+
+    luld_auction_collar() : message('J') {}
+    luld_auction_collar(const char* in) : message(in) {}
+};
+
+const static int8_t OPERATIONAL_HALT_LEN = 21;
+struct operational_halt : public message<OPERATIONAL_HALT_LEN> {
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
+    static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
+    static constexpr message_record STOCK{11, 8, message_record::field_type::ALPHA};
+    static constexpr message_record MARKET_CODE{19, 1, message_record::field_type::ALPHA};
+    static constexpr message_record OPERATIONAL_HALT_ACTION{20, 1, message_record::field_type::ALPHA};
+
+    operational_halt() : message('h') {}
+    operational_halt(const char* in) : message(in) {}
+};
+
+const static int8_t ADD_ORDER_LEN = 36;
+struct add_order : public message<ADD_ORDER_LEN> {
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
+    static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
+    static constexpr message_record ORDER_REFERENCE_NUMBER{11, 8, message_record::field_type::INTEGER};
+    static constexpr message_record BUY_SELL_INDICATOR{19, 1, message_record::field_type::ALPHA};
+    static constexpr message_record SHARES{20, 4, message_record::field_type::INTEGER};
+    static constexpr message_record STOCK{24, 8, message_record::field_type::ALPHA};
+    static constexpr message_record PRICE{32, 4, message_record::field_type::PRICE4};
+
+    add_order() : message('A') {}
+    add_order(const char* in) : message(in) {}
+};
+
+const static int8_t ADD_ORDER_WITH_MPID_LEN = 40;
+struct add_order_with_mpid : public message<ADD_ORDER_LEN> {
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
+    static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
+    static constexpr message_record ORDER_REFERENCE_NUMBER{11, 8, message_record::field_type::INTEGER};
+    static constexpr message_record BUY_SELL_INDICATOR{19, 1, message_record::field_type::ALPHA};
+    static constexpr message_record SHARES{20, 4, message_record::field_type::INTEGER};
+    static constexpr message_record STOCK{24, 8, message_record::field_type::ALPHA};
+    static constexpr message_record PRICE{32, 4, message_record::field_type::PRICE4};
+    static constexpr message_record ATTRIBUTION{36, 4, message_record::field_type::ALPHA};
+
+    add_order_with_mpid() : message('F') {}
+    add_order_with_mpid(const char* in) : message(in) {}
 };
 
 } // end namespace itch
