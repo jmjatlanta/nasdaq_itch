@@ -301,4 +301,172 @@ struct add_order_with_mpid : public message<ADD_ORDER_LEN> {
     add_order_with_mpid(const char* in) : message(in) {}
 };
 
+const static int8_t ORDER_EXECUTED_LEN = 31;
+struct order_executed : public message<ORDER_EXECUTED_LEN> {
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
+    static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
+    static constexpr message_record ORDER_REFERENCE_NUMBER{11, 8, message_record::field_type::INTEGER};
+    static constexpr message_record EXECUTED_SHARES{19, 4, message_record::field_type::INTEGER};
+    static constexpr message_record MATCH_NUMBER{23, 8, message_record::field_type::INTEGER};
+
+    order_executed() : message('E') {}
+    order_executed(const char* in) : message(in) {}
+};
+
+const static int8_t ORDER_EXECUTED_WITH_PRICE_LEN = 36;
+struct order_executed_with_price : public message<ORDER_EXECUTED_WITH_PRICE_LEN> {
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
+    static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
+    static constexpr message_record ORDER_REFERENCE_NUMBER{11, 8, message_record::field_type::INTEGER};
+    static constexpr message_record EXECUTED_SHARES{19, 4, message_record::field_type::INTEGER};
+    static constexpr message_record MATCH_NUMBER{23, 8, message_record::field_type::INTEGER};
+    static constexpr message_record PRINTABLE{31, 1, message_record::field_type::ALPHA};
+    static constexpr message_record EXECUTION_PRICE{32, 4, message_record::field_type::PRICE4};
+
+    order_executed_with_price() : message('C') {}
+    order_executed_with_price(const char* in) : message(in) {}
+};
+
+const static int8_t ORDER_CANCEL_LEN = 23;
+struct order_cancel : public message<ORDER_CANCEL_LEN> {
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
+    static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
+    static constexpr message_record ORDER_REFERENCE_NUMBER{11, 8, message_record::field_type::INTEGER};
+    static constexpr message_record CANCELLED_SHARES{19, 4, message_record::field_type::INTEGER};
+
+    order_cancel() : message('X') {}
+    order_cancel(const char* in) : message(in) {}
+};
+
+const static int8_t ORDER_DELETE_LEN = 19;
+struct order_delete : public message<ORDER_DELETE_LEN> {
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
+    static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
+    static constexpr message_record ORDER_REFERENCE_NUMBER{11, 8, message_record::field_type::INTEGER};
+
+    order_delete() : message('D') {}
+    order_delete(const char* in) : message(in) {}
+};
+
+const static int8_t ORDER_REPLACE_LEN = 35;
+struct order_replace : public message<ORDER_REPLACE_LEN> {
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
+    static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
+    static constexpr message_record ORIGINAL_ORDER_REFERENCE_NUMBER{11, 8, message_record::field_type::INTEGER};
+    static constexpr message_record NEW_ORDER_REFERENCE_NUMBER{19, 8, message_record::field_type::INTEGER};
+    static constexpr message_record SHARES{27, 4, message_record::field_type::INTEGER};
+    static constexpr message_record PRICE{31, 4, message_record::field_type::PRICE4};
+
+    order_replace() : message('U') {}
+    order_replace(const char* in) : message(in) {}
+};
+
+const static int8_t TRADE_LEN = 35;
+struct trade : public message<TRADE_LEN> {
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
+    static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
+    static constexpr message_record ORDER_REFERENCE_NUMBER{11, 8, message_record::field_type::INTEGER};
+    static constexpr message_record BUY_SELL_INDICATOR{19, 1, message_record::field_type::ALPHA};
+    static constexpr message_record SHARES{20, 4, message_record::field_type::INTEGER};
+    static constexpr message_record STOCK{24, 8, message_record::field_type::ALPHA};
+    static constexpr message_record PRICE{32, 4, message_record::field_type::PRICE4};
+    static constexpr message_record MATCH_NUMBER{36, 8, message_record::field_type::INTEGER};
+
+    trade() : message('P') {}
+    trade(const char* in) : message(in) {}
+};
+
+const static int8_t TRADE_NON_CROSS_LEN = 40;
+struct trade_non_cross : public message<TRADE_NON_CROSS_LEN> {
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
+    static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
+    static constexpr message_record SHARES{11, 4, message_record::field_type::INTEGER};
+    static constexpr message_record STOCK{19, 8, message_record::field_type::ALPHA};
+    static constexpr message_record CROSS_PRICE{27, 4, message_record::field_type::PRICE4};
+    static constexpr message_record MATCH_NUMBER{31, 8, message_record::field_type::INTEGER};
+    static constexpr message_record CROSS_TYPE{39, 1, message_record::field_type::ALPHA};
+
+    trade_non_cross() : message('Q') {}
+    trade_non_cross(const char* in) : message(in) {}
+};
+
+const static int8_t BROKEN_TRADE_LEN = 19;
+struct broken_trade : public message<BROKEN_TRADE_LEN> {
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
+    static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
+    static constexpr message_record MATCH_NUMBER{11, 8, message_record::field_type::INTEGER};
+
+    broken_trade() : message('B') {}
+    broken_trade(const char* in) : message(in) {}
+};
+
+const static int8_t NOII_LEN = 19;
+struct noii : public message<NOII_LEN> {
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
+    static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
+    static constexpr message_record PAIRED_SHARES{11, 8, message_record::field_type::INTEGER};
+    static constexpr message_record IMBALANCE_SHARES{19, 8, message_record::field_type::INTEGER};
+    static constexpr message_record IMBALANCE_DIRECTION{27, 1, message_record::field_type::ALPHA};
+    static constexpr message_record STOCK{28, 8, message_record::field_type::ALPHA};
+    static constexpr message_record FAR_PRICE{36, 4, message_record::field_type::PRICE4};
+    static constexpr message_record NEAR_PRICE{40, 4, message_record::field_type::PRICE4};
+    static constexpr message_record CURRENT_REFERENCE_PRICE{44, 4, message_record::field_type::PRICE4};
+    static constexpr message_record CROSS_TYPE{48, 1, message_record::field_type::ALPHA};
+    static constexpr message_record PRICE_VARIATION_INDICATOR{49, 1, message_record::field_type::ALPHA};
+
+    noii() : message('I') {}
+    noii(const char* in) : message(in) {}
+};
+
+const static int8_t RPII_LEN = 20;
+struct rpii : public message<RPII_LEN> {
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
+    static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
+    static constexpr message_record STOCK{11, 8, message_record::field_type::ALPHA};
+    static constexpr message_record INTEREST_FLAG{19, 1, message_record::field_type::ALPHA};
+
+    rpii() : message('N') {}
+    rpii(const char* in) : message(in) {}
+};
+
+const static int8_t DIRECT_LISTING_WITH_CAPITAL_RAISE_PRICE_DISCOVERY_LEN = 48;
+struct direct_listing_with_capital_raise_price_discovery : 
+        public message<DIRECT_LISTING_WITH_CAPITAL_RAISE_PRICE_DISCOVERY_LEN> {
+    static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR}; 
+    static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::CHAR}; 
+    static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
+    static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
+    static constexpr message_record STOCK{11, 8, message_record::field_type::ALPHA};
+    static constexpr message_record OPEN_ELIGIBILITY_STATUS{19, 1, message_record::field_type::ALPHA};
+    static constexpr message_record MINIMUM_ALLOWABLE_PRICE{20, 4, message_record::field_type::PRICE4};
+    static constexpr message_record MAXIMUM_ALLOWABLE_PRICE{24, 4, message_record::field_type::PRICE4};
+    static constexpr message_record NEAR_EXECUTION_PRICE{28, 4, message_record::field_type::PRICE4};
+    static constexpr message_record NEAR_EXECUTION_TIME{32, 8, message_record::field_type::INTEGER};
+    static constexpr message_record LOWER_PRICE_RANGE_COLLAR{40, 4, message_record::field_type::PRICE4};
+    static constexpr message_record UPPER_PRICE_RANGE_COLLAR{44, 4, message_record::field_type::PRICE4};
+
+    direct_listing_with_capital_raise_price_discovery() : message('O') {}
+    direct_listing_with_capital_raise_price_discovery(const char* in) : message(in) {}
+};
+
 } // end namespace itch
