@@ -118,15 +118,15 @@ struct message {
 };
 
 const static int8_t SYSTEM_EVENT_LEN = 12;
-struct system_event_message : public message<SYSTEM_EVENT_LEN> {
+struct system_event : public message<SYSTEM_EVENT_LEN> {
     static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::CHAR};
     static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::INTEGER};
     static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
     static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
     static constexpr message_record EVENT_CODE{11, 1, message_record::field_type::ALPHA};
 
-    system_event_message() : message('S') { }
-    system_event_message(const char* in) : message(in) {}
+    system_event() : message('S') { }
+    system_event(const char* in) : message(in) {}
 };
 
 const static int8_t STOCK_DIRECTORY_LEN = 39;
