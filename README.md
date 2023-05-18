@@ -19,6 +19,19 @@ for more examples:
     int timestamp = msg.get_int(msg.TIMESTAMP); // should equal 6
 ```
 
+or if you're the client taking in a feed:
+
+```
+    char message_type = network.peek_byte();
+    if (message_type == 'S')
+    {
+        char* record = network.read_bytes(itch::SYSTEM_EVENT_LEN);
+        itch::system_event msg(record);
+        int timestamp = msg.get_int(msg.TIMESTAMP);
+        // more code goes here
+    }
+```
+
 TODO:
 - Test each object for their length
 - Test each object for their prefix
