@@ -1,5 +1,7 @@
 ## Simple header-only C++ objects for NASDAQ ITCH 5.0 protocol
 
+NASDAQ ouch is also in process (see `ouch.h`)
+
 Simply take a peek in the single `itch.h` header file for details.
 
 There is a constructor if you want to create a blank object, and a constructor where you pass in a char pointer

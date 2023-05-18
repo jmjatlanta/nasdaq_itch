@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.25 )
 cmake_policy(VERSION 3.25)
 set(CMAKE_CXX_STANDARD 17)
 
-project ( itch_tests )
+project ( nasdaq_tests )
 
 include(FetchContent)
 FetchContent_Declare(
@@ -11,15 +11,16 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(googletest)
 
-add_executable( itch_tests 
-    simple.cpp
+add_executable( nasdaq_tests 
+    itch.cpp
+    ouch.cpp
 )
 
-target_include_directories(itch_tests PRIVATE 
+target_include_directories(nasdaq_tests PRIVATE 
     ../include
 )
 
-target_link_libraries(itch_tests 
+target_link_libraries(nasdaq_tests 
     GTest::gtest
     GTest::gtest_main
 )
