@@ -110,9 +110,19 @@ struct system_event : public message<SYSTEM_EVENT_LEN> {
     static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
     static constexpr message_record EVENT_CODE{11, 1, message_record::field_type::ALPHA};
 
+    /**
+     * Event codes:
+     * O Start of messages, outside of time stamp messages, the start of day message is the first message sent in any
+     *    trading day
+     * S Start of system hours
+     * Q Start of market hours
+     * M End of market hours
+     * E End of system hours
+     * C End of messages (last sent in a day)
+     */
     system_event() : message('S') { }
     system_event(const char* in) : message(in) {}
-    system_event(int stock_locate, int tracking_number, int timestamp, char event_code) : system_event()
+    system_event(uint16_t stock_locate, uint16_t tracking_number, uint64_t timestamp, char event_code) : system_event()
     {
         set_int(STOCK_LOCATE, stock_locate);
         set_int(TRACKING_NUMBER, tracking_number);
@@ -128,21 +138,99 @@ struct stock_directory : public message<STOCK_DIRECTORY_LEN> {
     static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
     static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
     static constexpr message_record STOCK{11, 8, message_record::field_type::ALPHA};
+    /***
+     * Valid market categories:
+     * Q Nasdaq Global Select
+     * G Nasdaq Global Market
+     * S Nasdaq Capital Market
+     * N NYSE
+     * A American
+     * P ARCA
+     * Z Bats Z
+     * V Investors Exchange LLC
+     * (space) Not available
+     */
+    static constexpr message_record MARKET_CATEGORY{19, 1, message_record::field_type::ALPHA};
+    /***
+     * Valid indicators:
+     * D Deficient
+     * E Delinquent
+     * Q Bankrupt
+     * S Suspended
+     * G Deficient and bankrupt
+     * H Deficient and delinquent
+     * J Delincuent and bankrupt
+     * K Deficient, Delinquent, and bankrupt
+     * C Creations and/or redemptions suspended for exchange traded product
+     * N Normal
+     * (space) Not available (used for non-nasdaq)
+     */
     static constexpr message_record FINANCIAL_STATUS_INDICATOR{20, 1, message_record::field_type::ALPHA};
     static constexpr message_record ROUND_LOT_SIZE{21, 4, message_record::field_type::INTEGER};
     static constexpr message_record ROUND_LOTS_ONLY{25, 1, message_record::field_type::ALPHA};
     static constexpr message_record ISSUE_CLASSIFICATION{26, 1, message_record::field_type::ALPHA};
     static constexpr message_record ISSUE_SUB_TYPE{27, 2, message_record::field_type::ALPHA};
+    /***
+     * P Live/production
+     * T Test
+     */
     static constexpr message_record AUTHENTICITY{29, 1, message_record::field_type::ALPHA};
+    /***
+     * Y restricted under 203(b)(3)
+     * N Not restricted
+     * (space) unknown
+     */
     static constexpr message_record SHORT_SALE_THRESHOLD_INDICATOR{30, 1, message_record::field_type::ALPHA};
+    /***
+     * Y / N
+     */
     static constexpr message_record IPO_FLAG{31, 1, message_record::field_type::ALPHA};
+    /***
+     * 1 Tier 1
+     * 2 Tier 2
+     * (space) Not available
+     */
     static constexpr message_record LULDREFERENCE_PRICE_TIER{32, 1, message_record::field_type::ALPHA};
+    /***
+     * Y / N / (space)
+     */
     static constexpr message_record ETP_FLAG{33, 1, message_record::field_type::ALPHA};
+    /***
+     * Note: always round this down
+     */
     static constexpr message_record ETP_LEVERAGE_FACTOR{34, 4, message_record::field_type::INTEGER};
+    /***
+     * ETP is an inverse ETP (Y/N) i.e. if Y, the factor above should be treated as negative
+     */
     static constexpr message_record INVERSE_INDICATOR{38, 1, message_record::field_type::ALPHA};
     
     stock_directory() : message('R') {}
     stock_directory(const char* in) : message(in) {}
+    stock_directory(uint16_t stock_locate, uint16_t tracking_number, uint64_t timestamp, const std::string& stock,
+            char market_category,
+            char financial_status_indicator, uint32_t round_lot_size, char round_lots_only, char issue_classification,
+            const std::string& issue_sub_type, char authenticity, char short_sale_threshold_indicator, char ipo_flag,
+            char luldreference_price_tier, char etp_flag, uint32_t etp_leverage_factor, char inverse_indicator)
+            : stock_directory()
+    {
+        set_int(STOCK_LOCATE, stock_locate);
+        set_int(TRACKING_NUMBER, tracking_number);
+        set_int(TIMESTAMP, timestamp);
+        set_string(STOCK, stock);
+        set_string(MARKET_CATEGORY, std::to_string(market_category)); // important
+        set_string(FINANCIAL_STATUS_INDICATOR, std::to_string(financial_status_indicator)); // important
+        set_int(ROUND_LOT_SIZE, round_lot_size);
+        set_string(ROUND_LOTS_ONLY, std::to_string(round_lots_only));
+        set_string(ISSUE_CLASSIFICATION, std::to_string(issue_classification));
+        set_string(ISSUE_SUB_TYPE, issue_sub_type);
+        set_string(AUTHENTICITY, std::to_string(authenticity));
+        set_string(SHORT_SALE_THRESHOLD_INDICATOR, std::to_string(short_sale_threshold_indicator));
+        set_string(IPO_FLAG, std::to_string(ipo_flag));
+        set_string(LULDREFERENCE_PRICE_TIER, std::to_string(luldreference_price_tier));
+        set_string(ETP_FLAG, std::to_string(etp_flag));
+        set_int(ETP_LEVERAGE_FACTOR, etp_leverage_factor);
+        set_string(INVERSE_INDICATOR, std::to_string(inverse_indicator));
+    }
 };
 
 const static int8_t STOCK_TRADING_ACTION_LEN = 25;
@@ -152,12 +240,29 @@ struct stock_trading_action : public message<STOCK_TRADING_ACTION_LEN> {
     static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
     static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
     static constexpr message_record STOCK{11, 8, message_record::field_type::ALPHA};
+    /***
+     * H Halted across all markets
+     * P Paused across all markets
+     * Q Quotation only period
+     * T Trading
+     */
     static constexpr message_record TRADING_STATE{19, 1, message_record::field_type::ALPHA};
     static constexpr message_record RESERVED{20, 1, message_record::field_type::ALPHA};
     static constexpr message_record REASON{21, 4, message_record::field_type::ALPHA};
 
     stock_trading_action() : message('H') {}
     stock_trading_action(const char* in) : message(in) {}
+    stock_trading_action(uint16_t stock_locate, uint16_t tracking_number, uint64_t timestamp, const std::string& stock,
+            char trading_state, char reserved, const std::string& reason) : stock_trading_action()
+    {
+        set_int(STOCK_LOCATE, stock_locate);
+        set_int(TRACKING_NUMBER, tracking_number);
+        set_int(TIMESTAMP, timestamp);
+        set_string(STOCK, stock);
+        set_string(TRADING_STATE, std::to_string(trading_state));
+        set_string(RESERVED, std::to_string(reserved));
+        set_string(REASON, reason);
+    }
 };
 
 const static int8_t REG_SHO_RESTRICTION_LEN = 20;
@@ -181,8 +286,25 @@ struct market_participant_position : public message<MARKET_PARTICIPANT_POSITION_
     static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
     static constexpr message_record MPID{11, 4, message_record::field_type::ALPHA};
     static constexpr message_record STOCK{15, 8, message_record::field_type::ALPHA};
+    /***
+     * Y/N
+     */
     static constexpr message_record PRIMARY_MARKET_MAKER{23, 1, message_record::field_type::ALPHA};
+    /****
+     * N Normal
+     * P Passive
+     * S Syndicate
+     * R Pre-syndicate
+     * L Penalty
+     */
     static constexpr message_record MARKET_MAKER_MODE{24, 1, message_record::field_type::ALPHA};
+    /***
+     * A Active
+     * E Excused/withdrawn
+     * W Withdrawn
+     * S Suspended
+     * D Deleted
+     */
     static constexpr message_record MARKET_PARTICIPANT_STATE{25, 1, message_record::field_type::ALPHA};
 
     market_participant_position() : message('L') {}
@@ -276,13 +398,22 @@ struct add_order : public message<ADD_ORDER_LEN> {
     add_order(const char* in) : message(in) {}
 };
 
+/****
+ * The more common order notification
+ */
 const static int8_t ADD_ORDER_WITH_MPID_LEN = 40;
 struct add_order_with_mpid : public message<ADD_ORDER_LEN> {
     static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::ALPHA}; 
     static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::ALPHA}; 
     static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
     static constexpr message_record TIMESTAMP{5, 6, message_record::field_type::INTEGER};
+    /***
+     * Assigned at order creation
+     */
     static constexpr message_record ORDER_REFERENCE_NUMBER{11, 8, message_record::field_type::INTEGER};
+    /***
+     * B/S
+     */
     static constexpr message_record BUY_SELL_INDICATOR{19, 1, message_record::field_type::ALPHA};
     static constexpr message_record SHARES{20, 4, message_record::field_type::INTEGER};
     static constexpr message_record STOCK{24, 8, message_record::field_type::ALPHA};
