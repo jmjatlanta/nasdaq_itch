@@ -112,6 +112,13 @@ struct system_event : public message<SYSTEM_EVENT_LEN> {
 
     system_event() : message('S') { }
     system_event(const char* in) : message(in) {}
+    system_event(int stock_locate, int tracking_number, int timestamp, char event_code) : system_event()
+    {
+        set_int(STOCK_LOCATE, stock_locate);
+        set_int(TRACKING_NUMBER, tracking_number);
+        set_int(TIMESTAMP, timestamp);
+        set_string(EVENT_CODE, std::to_string(event_code));
+    }
 };
 
 const static int8_t STOCK_DIRECTORY_LEN = 39;
