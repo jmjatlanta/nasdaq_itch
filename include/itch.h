@@ -43,6 +43,7 @@ struct message {
     {
         memcpy(record, in, SIZE);
     }
+    constexpr int get_size() { return SIZE; }
     const uint8_t get_raw_byte(uint8_t pos) const { return record[pos]; }
     void set_raw_byte(uint8_t pos, uint8_t in) { record[pos] = in; }
     int64_t get_int(const message_record& mr) {
