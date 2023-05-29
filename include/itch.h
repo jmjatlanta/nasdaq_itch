@@ -39,7 +39,7 @@ struct message {
         record[0] = message_type;
         memset( &record[1], 0, SIZE-1 );
     }
-    message(const char* in)
+    message(const uint8_t* in)
     {
         memcpy(record, in, SIZE);
     }
@@ -88,19 +88,19 @@ struct message {
     }
     void set_string(const message_record& mr, const std::string& in)
     {
-        strncpy(&record[mr.offset], in.c_str(), mr.length);
+        strncpy((char*)&record[mr.offset], in.c_str(), mr.length);
     }
     const std::string get_string(const message_record& mr)
     {
         // get the section of the record we want
         char buf[mr.length+1];
         memset(buf, 0, mr.length+1);
-        strncpy(buf, &record[mr.offset], mr.length);
+        strncpy(buf, (char*)&record[mr.offset], mr.length);
         return buf;
     }
-    const char* get_record() const { return record; }
+    const uint8_t* get_record() const { return record; }
     protected:
-    char record[SIZE];
+    uint8_t record[SIZE];
 };
 
 const static int8_t SYSTEM_EVENT_LEN = 12;
@@ -122,7 +122,7 @@ struct system_event : public message<SYSTEM_EVENT_LEN> {
      * C End of messages (last sent in a day)
      */
     system_event() : message('S') { }
-    system_event(const char* in) : message(in) {}
+    system_event(const uint8_t* in) : message(in) {}
     system_event(uint16_t stock_locate, uint16_t tracking_number, uint64_t timestamp, char event_code) : system_event()
     {
         set_int(STOCK_LOCATE, stock_locate);
@@ -206,7 +206,7 @@ struct stock_directory : public message<STOCK_DIRECTORY_LEN> {
     static constexpr message_record INVERSE_INDICATOR{38, 1, message_record::field_type::ALPHA};
     
     stock_directory() : message('R') {}
-    stock_directory(const char* in) : message(in) {}
+    stock_directory(const uint8_t* in) : message(in) {}
     stock_directory(uint16_t stock_locate, uint16_t tracking_number, uint64_t timestamp, const std::string& stock,
             char market_category,
             char financial_status_indicator, uint32_t round_lot_size, char round_lots_only, char issue_classification,
@@ -252,7 +252,7 @@ struct stock_trading_action : public message<STOCK_TRADING_ACTION_LEN> {
     static constexpr message_record REASON{21, 4, message_record::field_type::ALPHA};
 
     stock_trading_action() : message('H') {}
-    stock_trading_action(const char* in) : message(in) {}
+    stock_trading_action(const uint8_t* in) : message(in) {}
     stock_trading_action(uint16_t stock_locate, uint16_t tracking_number, uint64_t timestamp, const std::string& stock,
             char trading_state, char reserved, const std::string& reason) : stock_trading_action()
     {
@@ -276,7 +276,7 @@ struct reg_sho_restriction : public message<REG_SHO_RESTRICTION_LEN> {
     static constexpr message_record REG_SHO_ACTION{19, 1, message_record::field_type::ALPHA};
 
     reg_sho_restriction() : message('Y') {}
-    reg_sho_restriction(const char* in) : message(in) {}
+    reg_sho_restriction(const uint8_t* in) : message(in) {}
 };
 
 const static int8_t MARKET_PARTICIPANT_POSITION_LEN = 26;
@@ -309,7 +309,7 @@ struct market_participant_position : public message<MARKET_PARTICIPANT_POSITION_
     static constexpr message_record MARKET_PARTICIPANT_STATE{25, 1, message_record::field_type::ALPHA};
 
     market_participant_position() : message('L') {}
-    market_participant_position(const char* in) : message(in) {}
+    market_participant_position(const uint8_t* in) : message(in) {}
 };
 
 const static int8_t MWCP_DECLINE_LEVEL_LEN = 35;
@@ -323,7 +323,7 @@ struct mwcp_decline_level : public message<MWCP_DECLINE_LEVEL_LEN> {
     static constexpr message_record LEVEL_3{27, 8, message_record::field_type::PRICE8};
 
     mwcp_decline_level() : message('V') {}
-    mwcp_decline_level(const char* in) : message(in) {}
+    mwcp_decline_level(const uint8_t* in) : message(in) {}
 };
 
 const static int8_t MWCP_STATUS_LEN = 12;
@@ -335,7 +335,7 @@ struct mwcp_status : public message<MWCP_STATUS_LEN> {
     static constexpr message_record BREACHED_LEVEL{11, 1, message_record::field_type::ALPHA};
 
     mwcp_status() : message('W') {}
-    mwcp_status(const char* in) : message(in) {}
+    mwcp_status(const uint8_t* in) : message(in) {}
 };
 
 const static int8_t IPO_QUOTING_PERIOD_UPDATE_LEN = 28;
@@ -350,7 +350,7 @@ struct ipo_quoting_period_update : public message<IPO_QUOTING_PERIOD_UPDATE_LEN>
     static constexpr message_record IPO_PRICE{24, 4, message_record::field_type::PRICE4};
 
     ipo_quoting_period_update() : message('K') {}
-    ipo_quoting_period_update(const char* in) : message(in) {}
+    ipo_quoting_period_update(const uint8_t* in) : message(in) {}
 };
     
 const static int8_t LULD_AUCTION_COLLAR_LEN = 35;
@@ -366,7 +366,7 @@ struct luld_auction_collar : public message<LULD_AUCTION_COLLAR_LEN> {
     static constexpr message_record AUCTION_COLLAR_EXTENSION{31, 4, message_record::field_type::INTEGER};
 
     luld_auction_collar() : message('J') {}
-    luld_auction_collar(const char* in) : message(in) {}
+    luld_auction_collar(const uint8_t* in) : message(in) {}
 };
 
 const static int8_t OPERATIONAL_HALT_LEN = 21;
@@ -380,7 +380,7 @@ struct operational_halt : public message<OPERATIONAL_HALT_LEN> {
     static constexpr message_record OPERATIONAL_HALT_ACTION{20, 1, message_record::field_type::ALPHA};
 
     operational_halt() : message('h') {}
-    operational_halt(const char* in) : message(in) {}
+    operational_halt(const uint8_t* in) : message(in) {}
 };
 
 const static int8_t ADD_ORDER_LEN = 36;
@@ -396,7 +396,7 @@ struct add_order : public message<ADD_ORDER_LEN> {
     static constexpr message_record PRICE{32, 4, message_record::field_type::PRICE4};
 
     add_order() : message('A') {}
-    add_order(const char* in) : message(in) {}
+    add_order(const uint8_t* in) : message(in) {}
 };
 
 /****
@@ -422,7 +422,7 @@ struct add_order_with_mpid : public message<ADD_ORDER_LEN> {
     static constexpr message_record ATTRIBUTION{36, 4, message_record::field_type::ALPHA};
 
     add_order_with_mpid() : message('F') {}
-    add_order_with_mpid(const char* in) : message(in) {}
+    add_order_with_mpid(const uint8_t* in) : message(in) {}
 };
 
 const static int8_t ORDER_EXECUTED_LEN = 31;
@@ -436,7 +436,7 @@ struct order_executed : public message<ORDER_EXECUTED_LEN> {
     static constexpr message_record MATCH_NUMBER{23, 8, message_record::field_type::INTEGER};
 
     order_executed() : message('E') {}
-    order_executed(const char* in) : message(in) {}
+    order_executed(const uint8_t* in) : message(in) {}
 };
 
 const static int8_t ORDER_EXECUTED_WITH_PRICE_LEN = 36;
@@ -452,7 +452,7 @@ struct order_executed_with_price : public message<ORDER_EXECUTED_WITH_PRICE_LEN>
     static constexpr message_record EXECUTION_PRICE{32, 4, message_record::field_type::PRICE4};
 
     order_executed_with_price() : message('C') {}
-    order_executed_with_price(const char* in) : message(in) {}
+    order_executed_with_price(const uint8_t* in) : message(in) {}
 };
 
 const static int8_t ORDER_CANCEL_LEN = 23;
@@ -465,7 +465,7 @@ struct order_cancel : public message<ORDER_CANCEL_LEN> {
     static constexpr message_record CANCELLED_SHARES{19, 4, message_record::field_type::INTEGER};
 
     order_cancel() : message('X') {}
-    order_cancel(const char* in) : message(in) {}
+    order_cancel(const uint8_t* in) : message(in) {}
 };
 
 const static int8_t ORDER_DELETE_LEN = 19;
@@ -477,7 +477,7 @@ struct order_delete : public message<ORDER_DELETE_LEN> {
     static constexpr message_record ORDER_REFERENCE_NUMBER{11, 8, message_record::field_type::INTEGER};
 
     order_delete() : message('D') {}
-    order_delete(const char* in) : message(in) {}
+    order_delete(const uint8_t* in) : message(in) {}
 };
 
 const static int8_t ORDER_REPLACE_LEN = 35;
@@ -492,7 +492,7 @@ struct order_replace : public message<ORDER_REPLACE_LEN> {
     static constexpr message_record PRICE{31, 4, message_record::field_type::PRICE4};
 
     order_replace() : message('U') {}
-    order_replace(const char* in) : message(in) {}
+    order_replace(const uint8_t* in) : message(in) {}
 };
 
 const static int8_t TRADE_LEN = 35;
@@ -509,7 +509,7 @@ struct trade : public message<TRADE_LEN> {
     static constexpr message_record MATCH_NUMBER{36, 8, message_record::field_type::INTEGER};
 
     trade() : message('P') {}
-    trade(const char* in) : message(in) {}
+    trade(const uint8_t* in) : message(in) {}
 };
 
 const static int8_t TRADE_NON_CROSS_LEN = 40;
@@ -525,7 +525,7 @@ struct trade_non_cross : public message<TRADE_NON_CROSS_LEN> {
     static constexpr message_record CROSS_TYPE{39, 1, message_record::field_type::ALPHA};
 
     trade_non_cross() : message('Q') {}
-    trade_non_cross(const char* in) : message(in) {}
+    trade_non_cross(const uint8_t* in) : message(in) {}
 };
 
 const static int8_t BROKEN_TRADE_LEN = 19;
@@ -537,7 +537,7 @@ struct broken_trade : public message<BROKEN_TRADE_LEN> {
     static constexpr message_record MATCH_NUMBER{11, 8, message_record::field_type::INTEGER};
 
     broken_trade() : message('B') {}
-    broken_trade(const char* in) : message(in) {}
+    broken_trade(const uint8_t* in) : message(in) {}
 };
 
 const static int8_t NOII_LEN = 19;
@@ -557,7 +557,7 @@ struct noii : public message<NOII_LEN> {
     static constexpr message_record PRICE_VARIATION_INDICATOR{49, 1, message_record::field_type::ALPHA};
 
     noii() : message('I') {}
-    noii(const char* in) : message(in) {}
+    noii(const uint8_t* in) : message(in) {}
 };
 
 const static int8_t RPII_LEN = 20;
@@ -570,7 +570,7 @@ struct rpii : public message<RPII_LEN> {
     static constexpr message_record INTEREST_FLAG{19, 1, message_record::field_type::ALPHA};
 
     rpii() : message('N') {}
-    rpii(const char* in) : message(in) {}
+    rpii(const uint8_t* in) : message(in) {}
 };
 
 const static int8_t DIRECT_LISTING_WITH_CAPITAL_RAISE_PRICE_DISCOVERY_LEN = 48;
@@ -590,7 +590,7 @@ struct direct_listing_with_capital_raise_price_discovery :
     static constexpr message_record UPPER_PRICE_RANGE_COLLAR{44, 4, message_record::field_type::PRICE4};
 
     direct_listing_with_capital_raise_price_discovery() : message('O') {}
-    direct_listing_with_capital_raise_price_discovery(const char* in) : message(in) {}
+    direct_listing_with_capital_raise_price_discovery(const uint8_t* in) : message(in) {}
 };
 
 } // end namespace itch
