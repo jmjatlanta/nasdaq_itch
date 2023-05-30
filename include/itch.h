@@ -46,7 +46,7 @@ struct message {
     constexpr int get_size() const { return SIZE; }
     const uint8_t get_raw_byte(uint8_t pos) const { return record[pos]; }
     void set_raw_byte(uint8_t pos, uint8_t in) { record[pos] = in; }
-    int64_t get_int(const message_record& mr) {
+    int64_t get_int(const message_record& mr) const {
         // how many bytes to grab
         switch(mr.length)
         {
@@ -90,7 +90,7 @@ struct message {
     {
         strncpy((char*)&record[mr.offset], in.c_str(), mr.length);
     }
-    const std::string get_string(const message_record& mr)
+    const std::string get_string(const message_record& mr) const
     {
         // get the section of the record we want
         char buf[mr.length+1];
@@ -423,6 +423,8 @@ struct add_order_with_mpid : public message<ADD_ORDER_LEN> {
 
     add_order_with_mpid() : message('F') {}
     add_order_with_mpid(const uint8_t* in) : message(in) {}
+    uint64_t order_reference_number() const { return get_int(ORDER_REFERENCE_NUMBER); };
+    std::string attribution() const { return get_string(ATTRIBUTION); }
 };
 
 const static int8_t ORDER_EXECUTED_LEN = 31;
