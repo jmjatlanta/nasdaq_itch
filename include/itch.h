@@ -514,8 +514,8 @@ struct trade : public message<TRADE_LEN> {
     trade(const uint8_t* in) : message(in) {}
 };
 
-const static int8_t TRADE_NON_CROSS_LEN = 40;
-struct trade_non_cross : public message<TRADE_NON_CROSS_LEN> {
+const static int8_t CROSS_TRADE_LEN = 40;
+struct cross_trade : public message<CROSS_TRADE_LEN> {
     static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::ALPHA}; 
     static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::ALPHA}; 
     static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
@@ -526,8 +526,8 @@ struct trade_non_cross : public message<TRADE_NON_CROSS_LEN> {
     static constexpr message_record MATCH_NUMBER{31, 8, message_record::field_type::INTEGER};
     static constexpr message_record CROSS_TYPE{39, 1, message_record::field_type::ALPHA};
 
-    trade_non_cross() : message('Q') {}
-    trade_non_cross(const uint8_t* in) : message(in) {}
+    cross_trade() : message('Q') {}
+    cross_trade(const uint8_t* in) : message(in) {}
 };
 
 const static int8_t BROKEN_TRADE_LEN = 19;
