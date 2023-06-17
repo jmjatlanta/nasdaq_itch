@@ -1,5 +1,6 @@
 #include "itch.h"
 #include <gtest/gtest.h>
+#include <sstream>
 
 TEST(simple, test1)
 {
@@ -36,3 +37,25 @@ TEST(simple, construct)
     EXPECT_EQ(msg.get_raw_byte(2), 0x01);
 }
 
+TEST(simple, largeNumbers)
+{
+    /*
+    POS Field
+    0   Message Type
+    1   Stock Locate
+    3   Tracking number
+    5   Timestamp
+    11  Order reference number
+    19  BUY_SELL_INDICATOR
+    20  Shares
+    24  Stock
+    32  Price (4 bytes)
+    */
+    itch::add_order msg;
+    int32_t price1 = 1000;
+    msg.set_int(itch::add_order::PRICE, price1);
+    int sz = msg.get_size();
+    const uint8_t* record = msg.get_record();
+    int32_t price2 = msg.get_int(itch::add_order::PRICE);
+    EXPECT_EQ(price1, price2);
+}

@@ -20,15 +20,20 @@ struct message_record {
     field_type type;
 };
 
-template <const int NUM_BYTES>
-std::shared_ptr<char[]> swap_endian_bytes(const void* in)
+template <typename T>
+T swap_endian_bytes(T in)
 {
-    std::shared_ptr<char[]> buffer(new char[8]);
-    const char* incoming = (const char*)in;
     static_assert(CHAR_BIT == 8, "CHAR_BIT != 8");
-    for(size_t k = 0; k < NUM_BYTES; k++)
-        buffer[k] = incoming[NUM_BYTES - k - 1];
-    return buffer;
+    union
+    {
+        T u;
+        unsigned char u8[sizeof(T)];
+    } source, dest;
+    source.u = in;
+
+    for(size_t k = 0; k < sizeof(T); k++)
+        dest.u8[k] = source.u8[sizeof(T) - k - 1];
+    return dest.u;
 }
 
 template<unsigned int SIZE>
@@ -47,44 +52,44 @@ struct message {
     const uint8_t get_raw_byte(uint8_t pos) const { return record[pos]; }
     void set_raw_byte(uint8_t pos, uint8_t in) { record[pos] = in; }
     int64_t get_int(const message_record& mr) const {
+        int64_t retVal = 0;
         // how many bytes to grab
         switch(mr.length)
         {
             case 2:
-                return (int64_t)*swap_endian_bytes<2>(&record[mr.offset]).get();
+                retVal = (int64_t)swap_endian_bytes<uint16_t>(*(uint16_t*)&record[mr.offset]);
+                break;
             case 4:
-                return (int64_t)*swap_endian_bytes<4>(&record[mr.offset]).get();
-            case 6:
-                return (int64_t)*swap_endian_bytes<6>(&record[mr.offset]).get();
+                retVal = (int64_t)swap_endian_bytes<uint32_t>(*(uint32_t*)&record[mr.offset]);
+                break;
             case 8:
-                return (int64_t)*swap_endian_bytes<8>(&record[mr.offset]).get();
+                retVal = (int64_t)swap_endian_bytes<uint64_t>(*(uint64_t*)&record[mr.offset]);
+                break;
             default:
                 break;
         }
-        return 0;
+        return retVal;
     }
     void set_int(const message_record& mr, int64_t in)
     {
+        int64_t tmp = in;
         switch(mr.length)
         {
             case 1:
-                memcpy(&record[mr.offset], &in, mr.length);
                 break;
             case 2:
-                memcpy(&record[mr.offset], swap_endian_bytes<2>(&in).get(), mr.length);
+                tmp = swap_endian_bytes<uint16_t>(in);
                 break;
             case 4:
-                memcpy(&record[mr.offset], swap_endian_bytes<4>(&in).get(), mr.length);
-                break;
-            case 6:
-                memcpy(&record[mr.offset], swap_endian_bytes<6>(&in).get(), mr.length);
+                tmp = swap_endian_bytes<uint32_t>(in);
                 break;
             case 8:
-                memcpy(&record[mr.offset], swap_endian_bytes<8>(&in).get(), mr.length);
+                tmp = swap_endian_bytes<uint64_t>(in);
                 break;
             default:
                 break;
         }
+        memcpy(&record[mr.offset], &tmp, mr.length);
     }
     void set_string(const message_record& mr, const std::string& in)
     {
