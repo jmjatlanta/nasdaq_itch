@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 #include <sstream>
 
-TEST(simple, test1)
+TEST(itch, test1)
 {
     const uint8_t arr[] = { 'S', 0x01, 0x00, 0x02, 0x00, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 'O'};
     itch::system_event msg(arr);
@@ -15,7 +15,7 @@ TEST(simple, test1)
     EXPECT_EQ(msg.get_raw_byte(3), 0x02);
 }
 
-TEST(simple, construct)
+TEST(itch, construct)
 {
     itch::system_event msg;
     for(int i = 1; i < itch::SYSTEM_EVENT_LEN; ++i)
@@ -25,7 +25,7 @@ TEST(simple, construct)
     msg.set_int(msg.TIMESTAMP, 6);
     msg.set_string(msg.EVENT_CODE, "O");
     const uint8_t* record = msg.get_record();
-    const uint8_t arr[] = { 'S', 0x00, 0x01, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 'O'};
+    const uint8_t arr[] = { 'S', 0x00, 0x01, 0x00, 0x02, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 'O'};
     EXPECT_EQ(arr[0], record[0]);
     EXPECT_EQ(arr[1], record[1]);
     EXPECT_EQ(arr[2], record[2]);
@@ -37,7 +37,7 @@ TEST(simple, construct)
     EXPECT_EQ(msg.get_raw_byte(2), 0x01);
 }
 
-TEST(simple, largeNumbers)
+TEST(itch, largeNumbers)
 {
     /*
     POS Field

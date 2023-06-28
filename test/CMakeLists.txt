@@ -14,6 +14,7 @@ FetchContent_MakeAvailable(googletest)
 add_executable( nasdaq_tests 
     itch.cpp
     ouch.cpp
+    soupbintcp.cpp
 )
 
 target_include_directories(nasdaq_tests PRIVATE 

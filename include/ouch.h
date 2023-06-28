@@ -10,15 +10,20 @@
 namespace ouch
 {
 
-template <const int NUM_BYTES>
-std::shared_ptr<char[]> swap_endian_bytes(const void* in)
+template <typename T>
+T swap_endian_bytes(T in)
 {
-    std::shared_ptr<char[]> buffer(new char[8]);
-    const char* incoming = (const char*)in;
     static_assert(CHAR_BIT == 8, "CHAR_BIT != 8");
-    for(size_t k = 0; k < NUM_BYTES; k++)
-        buffer[k] = incoming[NUM_BYTES - k - 1];
-    return buffer;
+    union
+    {
+        T u;
+        unsigned char u8[sizeof(T)];
+    } source, dest;
+    source.u = in;
+
+    for(size_t k = 0; k < sizeof(T); k++)
+        dest.u8[k] = source.u8[sizeof(T) - k - 1];
+    return dest.u;
 }
 
 struct message_record {
@@ -127,45 +132,43 @@ struct message {
     }
     const uint8_t get_raw_byte(uint8_t pos) const { return record[pos]; }
     void set_raw_byte(uint8_t pos, uint8_t in) { record[pos] = in; }
-    uint64_t get_int(const message_record& mr) {
+    int64_t get_int(const message_record& mr) {
         // how many bytes to grab
         switch(mr.length)
         {
             case 1:
-                return (uint64_t)&record[mr.offset];
+                return (int64_t)&record[mr.offset];
             case 2:
-                return (uint64_t)*swap_endian_bytes<2>(&record[mr.offset]).get();
+                return (int64_t)swap_endian_bytes<uint16_t>(*(uint16_t*)&record[mr.offset]);
             case 4:
-                return (uint64_t)*swap_endian_bytes<4>(&record[mr.offset]).get();
+                return (int64_t)swap_endian_bytes<uint32_t>(*(uint32_t*)&record[mr.offset]);
             case 8:
-                return (uint64_t)*swap_endian_bytes<8>(&record[mr.offset]).get();
+                return (int64_t)swap_endian_bytes<uint64_t>(*(uint64_t*)&record[mr.offset]);
             default:
                 break;
         }
         return 0;
     }
-    void set_int(const message_record& mr, uint64_t in)
+    void set_int(const message_record& mr, int64_t in)
     {
+        int64_t tmp = 0;
         switch(mr.length)
         {
             case 1:
-                memcpy(&record[mr.offset], &in, mr.length);
                 break;
             case 2:
-                memcpy(&record[mr.offset], swap_endian_bytes<2>(&in).get(), mr.length);
+                tmp = swap_endian_bytes<uint16_t>(in);
                 break;
             case 4:
-                memcpy(&record[mr.offset], swap_endian_bytes<4>(&in).get(), mr.length);
-                break;
-            case 6:
-                memcpy(&record[mr.offset], swap_endian_bytes<6>(&in).get(), mr.length);
+                tmp = swap_endian_bytes<uint32_t>(in);
                 break;
             case 8:
-                memcpy(&record[mr.offset], swap_endian_bytes<8>(&in).get(), mr.length);
+                tmp = swap_endian_bytes<uint64_t>(in);
                 break;
             default:
                 break;
         }
+        memcpy(&record[mr.offset], &tmp, mr.length);
     }
     void set_string(const message_record& mr, const std::string& in)
     {
@@ -192,26 +195,24 @@ struct message {
         // copy in the values
         tag_values[orig_sz] = length + 1; // add 1 for OptionTag
         tag_values[orig_sz + 1] = to_underlying(tn);
+        uint64_t tmp = in;
         switch(length)
         {
             case 1:
-                memcpy(&tag_values[orig_sz + 2], &in, length);
                 break;
             case 2:
-                memcpy(&tag_values[orig_sz + 2], swap_endian_bytes<2>(&in).get(), length);
+                tmp = swap_endian_bytes<uint16_t>(in);
                 break;
             case 4:
-                memcpy(&tag_values[orig_sz + 2], swap_endian_bytes<4>(&in).get(), length);
-                break;
-            case 6:
-                memcpy(&tag_values[orig_sz + 2], swap_endian_bytes<6>(&in).get(), length);
+                tmp = swap_endian_bytes<uint32_t>(in);
                 break;
             case 8:
-                memcpy(&tag_values[orig_sz + 2], swap_endian_bytes<8>(&in).get(), length);
+                tmp = swap_endian_bytes<uint64_t>(in);
                 break;
             default:
                 break;
         }
+        memcpy(&tag_values[orig_sz + 2], &tmp, length);
         // adjust the reported length of the appendages
         set_int(*variable_field_record, sz);
     }
@@ -260,13 +261,13 @@ struct message {
                 switch(tag_values[0]-1)
                 {
                     case 1:
-                        return (uint64_t)&tag_values[pos+2];
+                        return (int64_t)&tag_values[pos+2];
                     case 2:
-                        return (uint64_t)*swap_endian_bytes<2>(&tag_values[pos+2]).get();
+                        return (int64_t)swap_endian_bytes<uint16_t>(*(uint16_t*)&tag_values[pos+2]);
                     case 4:
-                        return (uint64_t)*swap_endian_bytes<4>(&tag_values[pos+2]).get();
+                        return (int64_t)swap_endian_bytes<uint32_t>(*(uint32_t*)&tag_values[pos+2]);
                     case 8:
-                        return (uint64_t)*swap_endian_bytes<8>(&tag_values[pos+2]).get();
+                        return (int64_t)swap_endian_bytes<uint64_t>(*(uint64_t*)&tag_values[pos+2]);
                     default:
                         break;
                 }
