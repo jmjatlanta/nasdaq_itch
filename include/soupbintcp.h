@@ -1,7 +1,9 @@
 #pragma once
 #include <cstdint>
+#include <cstring> // memcpy
 #include <string>
 #include <vector>
+#include <stdexcept>
 
 namespace soupbintcp {
 
@@ -42,24 +44,24 @@ struct message {
     message(char message_type) : message_type(message_type)
     {
         // we don't have the size yet, so allocate SIZE
-        record = (char*)malloc(SIZE);
+        record = (unsigned char*)malloc(SIZE);
         if (record == nullptr)
             throw std::invalid_argument("Size too big");
         allocated_space = SIZE;
         // set the size to SIZE
         uint16_t swapped = swap_endian_bytes<uint16_t>(allocated_space-2);
-        memcpy( &record[0], &swapped, 2);
+        ::memcpy( &record[0], &swapped, 2);
         // set the message type
         record[2] = message_type;
         if (SIZE-3 > 0)
-            memset( &record[3], 0, SIZE-3 );
+            ::memset( &record[3], 0, SIZE-3 );
     }
-    message(const char* in) : message_type(in[0])
+    message(const unsigned char* in) : message_type(in[0])
     {
         // calculate the size
         size_t sz = swap_endian_bytes<uint16_t>(*(uint16_t*)&in[0]);
         allocated_space = sz + 2;
-        record = (char*)malloc(allocated_space);
+        record = (unsigned char*)malloc(allocated_space);
         memcpy(record, in, allocated_space);
     }
     ~message() {
@@ -107,14 +109,14 @@ struct message {
     }
     void set_string(const message_record& mr, const std::string& in)
     {
-        strncpy(&record[mr.offset], in.c_str(), mr.length);
+        strncpy((char*)&record[mr.offset], in.c_str(), mr.length);
     }
     const std::string get_string(const message_record& mr)
     {
         // get the section of the record we want
         char buf[mr.length+1];
         memset(buf, 0, mr.length+1);
-        strncpy(buf, &record[mr.offset], mr.length);
+        strncpy(buf, (const char*)&record[mr.offset], mr.length);
         return buf;
     }
     void set_message(const std::vector<unsigned char> data)
@@ -122,7 +124,7 @@ struct message {
         // do we need to allocate space?
         size_t needed_space = SIZE + data.size();
         if (allocated_space <= needed_space) {
-            record = (char*)realloc(record, needed_space);
+            record = (unsigned char*)realloc(record, needed_space);
             allocated_space = needed_space;
             const unsigned char* tmp = (unsigned char*)&allocated_space;
             uint16_t sz = swap_endian_bytes<uint16_t>(allocated_space - 2);
@@ -134,17 +136,59 @@ struct message {
             std::copy(data.begin(), data.end(), &record[SIZE]);
         }
     }
-    std::vector<unsigned char> get_message() 
+    std::vector<unsigned char> get_message() const
     {
         size_t sz = allocated_space - SIZE;
         std::vector<unsigned char> vec(sz);
         vec.assign(&record[SIZE], &record[SIZE] + sz);
         return vec;
     }
-    const char* get_record() const { return record; }
+    std::vector<unsigned char> get_record_as_vec() const
+    {
+        std::vector<unsigned char> vec(allocated_space);
+        vec.assign(&record[0], &record[0] + allocated_space);
+        return vec;
+    }
+
+    const unsigned char* get_record() const { return record; }
     protected:
-    char *record = nullptr;
+    unsigned char *record = nullptr;
     size_t allocated_space = 0;
+};
+
+/***
+ * A temporary storage area for an incoming message
+ */
+struct incoming_message
+{
+    incoming_message() { clean(); }
+    bool decode_header()
+    {
+        switch(buffer[2])
+        {
+            case('+'):
+            case('A'):
+            case('J'):
+            case('S'):
+            case('H'):
+            case('Z'):
+            case('L'):
+            case('U'):
+            case('R'):
+            case('O'):
+                return true;
+        }
+        return false;
+    }
+    unsigned char* data() { return &buffer[0]; }
+    unsigned char* body() { return &buffer[3]; }
+    size_t body_length() { uint16_t val; memcpy(&val, buffer, sizeof(val)); return swap_endian_bytes<uint16_t>(val)-1; }
+    void clean() { memset(&buffer[0], 0, max_length); }
+    
+    private:
+    static const size_t max_length = 65535;
+    size_t curr_length = 0;
+    unsigned char buffer[max_length];
 };
 
 const static uint8_t DEBUG_PACKET_LEN = 3;
@@ -154,7 +198,7 @@ struct debug_packet : public message<DEBUG_PACKET_LEN>
     static constexpr message_record PACKET_TYPE{2, 1, message_record::field_type::ALPHA};
     
     debug_packet() : message('+') {}
-    debug_packet(const char* in) : message(in) {}
+    debug_packet(const unsigned char* in) : message(in) {}
 };
 
 /*****
@@ -170,7 +214,7 @@ struct login_accepted : public message<LOGIN_ACCEPTED_LEN>
     static constexpr message_record SEQUENCE_NUMBER{13, 20, message_record::field_type::NUMERIC};
     
     login_accepted() : message('A') {}
-    login_accepted(const char* in) : message(in) {}
+    login_accepted(const unsigned char* in) : message(in) {}
 };
 
 const static uint8_t LOGIN_REJECTED_LEN = 4;
@@ -182,7 +226,7 @@ struct login_rejected : public message<LOGIN_REJECTED_LEN>
     static constexpr message_record REJECT_REASON_CODE{3, 1, message_record::field_type::ALPHA};
     
     login_rejected() : message('J') {}
-    login_rejected(const char* in) : message(in) {}
+    login_rejected(const unsigned char* in) : message(in) {}
 };
 
 const static uint8_t SEQUENCED_DATA_LEN = 3;
@@ -192,7 +236,7 @@ struct sequenced_data : public message<SEQUENCED_DATA_LEN>
     static constexpr message_record PACKET_TYPE{2, 1, message_record::field_type::ALPHA};
     
     sequenced_data() : message('S') {}
-    sequenced_data(const char* in) : message(in) {}
+    sequenced_data(const unsigned char* in) : message(in) {}
 };
 
 const static uint8_t SERVER_HEARTBEAT_LEN = 3;
@@ -202,7 +246,7 @@ struct server_heartbeat : public message<SERVER_HEARTBEAT_LEN>
     static constexpr message_record PACKET_TYPE{2, 1, message_record::field_type::ALPHA};
     
     server_heartbeat() : message('H') {}
-    server_heartbeat(const char* in) : message(in) {}
+    server_heartbeat(const unsigned char* in) : message(in) {}
 };
 
 const static uint8_t END_OF_SESSION_LEN = 3;
@@ -212,7 +256,7 @@ struct end_of_session : public message<END_OF_SESSION_LEN>
     static constexpr message_record PACKET_TYPE{2, 1, message_record::field_type::ALPHA};
     
     end_of_session() : message('Z') {}
-    end_of_session(const char* in) : message(in) {}
+    end_of_session(const unsigned char* in) : message(in) {}
 };
 
 /****
@@ -230,17 +274,17 @@ struct login_request : public message<LOGIN_REQUEST_LEN>
     static constexpr message_record REQUESTED_SEQUENCE_NUMBER{29, 20, message_record::field_type::NUMERIC};
     
     login_request() : message('L') {}
-    login_request(const char* in) : message(in) {}
+    login_request(const unsigned char* in) : message(in) {}
 };
 
-const static uint8_t UNSEQUENCED_LEN = 3;
-struct unsequenced : public message<UNSEQUENCED_LEN>
+const static uint8_t UNSEQUENCED_DATA_LEN = 3;
+struct unsequenced_data : public message<UNSEQUENCED_DATA_LEN>
 {
     static constexpr message_record PACKET_LENGTH{0, 2, message_record::field_type::INTEGER};
     static constexpr message_record PACKET_TYPE{2, 1, message_record::field_type::ALPHA};
     
-    unsequenced() : message('U') {}
-    unsequenced(const char* in) : message(in) {}
+    unsequenced_data() : message('U') {}
+    unsequenced_data(const unsigned char* in) : message(in) {}
 };
 
 const static uint8_t CLIENT_HEARTBEAT_LEN = 3;
@@ -250,7 +294,7 @@ struct client_heartbeat : public message<CLIENT_HEARTBEAT_LEN>
     static constexpr message_record PACKET_TYPE{2, 1, message_record::field_type::ALPHA};
     
     client_heartbeat() : message('R') {}
-    client_heartbeat(const char* in) : message(in) {}
+    client_heartbeat(const unsigned char* in) : message(in) {}
 };
 
 const static uint8_t LOGOUT_REQUEST_LEN = 3;
@@ -260,7 +304,7 @@ struct logout_request : public message<LOGOUT_REQUEST_LEN>
     static constexpr message_record PACKET_TYPE{2, 1, message_record::field_type::ALPHA};
     
     logout_request() : message('O') {}
-    logout_request(const char* in) : message(in) {}
+    logout_request(const unsigned char* in) : message(in) {}
 };
 
 } // end namespace soupbintcp
