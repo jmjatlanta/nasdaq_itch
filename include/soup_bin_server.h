@@ -20,7 +20,7 @@ class AnonymousLoginVerifier : public SoupBinLoginVerifier
  * A SoupBin server that listens on a socket
 */
 template<typename CONNECTION>
-class SoupBinServer
+class SoupBinServer : public MessageRepeater
 {
     public:
     SoupBinServer(int32_t listenPort)
@@ -47,27 +47,42 @@ class SoupBinServer
 
     void send_sequenced(const std::vector<unsigned char>& bytes)
     {
+        uint64_t seq = nextSeq++;
+        messages[seq] = bytes;
         for(auto c : connections)
-            c->send_sequenced(bytes);
+            c->send_sequenced(seq, bytes);
     }
 
+    void repeat_from(SoupBinConnection* conn, uint64_t startPos)
+    {
+        while(true)
+        {
+            auto itr = messages.find(startPos);
+            if (itr == messages.end())
+                return;
+            conn->send_sequenced((*itr).first, (*itr).second);
+            startPos++;
+        }
+    }
     private:
     // boost asio
     void do_accept()
     {
         acceptor->async_accept([this](boost::system::error_code ec, boost::asio::ip::tcp::socket socket) {
             if (!ec)
-                connections.emplace_back(std::make_shared<CONNECTION>(std::move(socket)));
+                connections.emplace_back(std::make_shared<CONNECTION>(std::move(socket), this));
             if (!shuttingDown)
                 do_accept();
         });
     }
 
     protected:
+    std::atomic<uint64_t> nextSeq = 1;
     std::vector<std::shared_ptr<CONNECTION> > connections;
     SoupBinLoginVerifier* loginVerifier = nullptr;
     boost::asio::io_context io_context;
     boost::asio::ip::tcp::acceptor* acceptor;
     std::thread runThread;
     bool shuttingDown = false;
+    std::unordered_map<uint64_t, std::vector<unsigned char> > messages;
 };

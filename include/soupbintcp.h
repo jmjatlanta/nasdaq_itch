@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
+#include <sstream>
+#include <iomanip>
 
 namespace soupbintcp {
 
@@ -69,49 +71,68 @@ struct message {
     }
     const uint8_t get_raw_byte(uint8_t pos) const { return record[pos]; }
     void set_raw_byte(uint8_t pos, uint8_t in) { record[pos] = in; }
-    int64_t get_int(const message_record& mr) {
-        // how many bytes to grab
-        switch(mr.length)
+    int64_t get_int(const message_record& mr) const {
+        if (mr.type == message_record::field_type::NUMERIC)
         {
-            case 1:
-                return (int64_t)&record[mr.offset];
-            case 2:
-                return (int64_t)swap_endian_bytes<uint16_t>(*(uint16_t*)&record[mr.offset]);
-            case 4:
-                return (int64_t)swap_endian_bytes<uint32_t>(*(uint32_t*)&record[mr.offset]);
-            case 8:
-                return (int64_t)swap_endian_bytes<uint64_t>(*(uint64_t*)&record[mr.offset]);
-            default:
-                break;
+            // get just the portion we want
+            std::string val = get_string(mr);
+            return strtoll(val.c_str(), nullptr, 10);
+        }
+        else
+        {
+            //     how many bytes to grab
+            switch(mr.length)
+            {
+                    case 1:
+                        return (int64_t)&record[mr.offset];
+                    case 2:
+                        return (int64_t)swap_endian_bytes<uint16_t>(*(uint16_t*)&record[mr.offset]);
+                    case 4:
+                        return (int64_t)swap_endian_bytes<uint32_t>(*(uint32_t*)&record[mr.offset]);
+                case 8:
+                    return (int64_t)swap_endian_bytes<uint64_t>(*(uint64_t*)&record[mr.offset]);
+                default:
+                    break;
+            }
         }
         return 0;
     }
     void set_int(const message_record& mr, int64_t in)
     {
-        int64_t tmp = 0;
-        switch(mr.length)
+        if (mr.type == message_record::field_type::NUMERIC)
         {
-            case 1:
-                break;
-            case 2:
-                tmp = swap_endian_bytes<uint16_t>(in);
-                break;
-            case 4:
-                tmp = swap_endian_bytes<uint32_t>(in);
-                break;
-            case 8:
-                tmp = swap_endian_bytes<uint64_t>(in);
-                break;
-            default:
-                break;
+            // turn the value into a right-justified string
+            std::stringstream ss;
+            ss << std::right << std::setw(mr.length) << std::to_string(in);
+            memcpy((char*)&record[mr.offset], ss.str().c_str(), mr.length);
         }
-        memcpy(&record[mr.offset], &in, mr.length);
+        else
+        {
+            int64_t tmp = 0;
+            switch(mr.length)
+            {
+                case 1:
+                    break;
+                case 2:
+                    tmp = swap_endian_bytes<uint16_t>(in);
+                    break;
+                case 4:
+                    tmp = swap_endian_bytes<uint32_t>(in);
+                    break;
+                case 8:
+                    tmp = swap_endian_bytes<uint64_t>(in);
+                    break;
+                default:
+                    break;
+            }
+            memcpy(&record[mr.offset], &in, mr.length);
+        }
     }
     void set_string(const message_record& mr, const std::string& in)
     {
         strncpy((char*)&record[mr.offset], in.c_str(), mr.length);
     }
-    const std::string get_string(const message_record& mr)
+    const std::string get_string(const message_record& mr) const
     {
         // get the section of the record we want
         char buf[mr.length+1];

@@ -18,9 +18,6 @@ class SoupBinClient
     void send_unsequenced(const std::vector<unsigned char>& bytes)
     {
     }
-    void send_sequenced(const std::vector<unsigned char>& bytes)
-    {
-    }
 
     protected:
     CONNECTION connection;

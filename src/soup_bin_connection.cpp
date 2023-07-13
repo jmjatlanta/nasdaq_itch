@@ -1,14 +1,17 @@
 #include "soup_bin_server.h"
 #include "soupbintcp.h"
 
-SoupBinConnection::SoupBinConnection(boost::asio::ip::tcp::socket inSkt)
-        : heartbeatTimer(this, 2000, Timer::get_time()), localIsServer(true), skt(std::move(inSkt))
+SoupBinConnection::SoupBinConnection(boost::asio::ip::tcp::socket inSkt, MessageRepeater* parent)
+        : heartbeatTimer(this, 2000, Timer::get_time()), localIsServer(true), skt(std::move(inSkt)), parent(parent)
 {
+    status = Status::CONNECTED;
     do_read_header();
 }
 
-SoupBinConnection::SoupBinConnection(const std::string& url, const std::string& user, const std::string& pw) 
-        : heartbeatTimer(this, 2000, Timer::get_time()), localIsServer(false), skt(io_context), username(user), password(pw)
+SoupBinConnection::SoupBinConnection(const std::string& url, const std::string& user, const std::string& pw,
+        const std::string& sessionId, uint64_t nextSequenceNo) 
+        : heartbeatTimer(this, 2000, Timer::get_time()), localIsServer(false), skt(io_context), 
+        username(user), password(pw), sessionId(sessionId), nextSeq(nextSequenceNo)
 {
     try
     {
@@ -34,11 +37,46 @@ SoupBinConnection::~SoupBinConnection()
 {
     try
     {
-        skt.close();
+        close_socket();
         if (readerThread.joinable())
             readerThread.join();
-    } catch(const std::exception& e) {
+    } catch(...) {
         // TODO: 
+    }
+}
+
+void SoupBinConnection::close_socket()
+{
+    try {
+        status = Status::DISCONNECTED;
+        if (skt.is_open())
+            skt.close();
+    } catch (...) {
+    }
+}
+
+void SoupBinConnection::on_login_request(const soupbintcp::login_request& in)
+{
+    std::string requestedSessionId = in.get_string(soupbintcp::login_request::REQUESTED_SESSION);
+    if (requestedSessionId.empty())
+    {
+        std::stringstream ss;
+        ss << std::right << std::setw(10) << "ABC";
+        requestedSessionId = ss.str();
+    }
+    uint64_t requestedSeqNo = in.get_int(soupbintcp::login_request::REQUESTED_SEQUENCE_NUMBER); 
+    bool resend = false;
+    if (requestedSeqNo != 0)
+        resend = true;
+    else
+        requestedSeqNo = 1;
+    soupbintcp::login_accepted msg;
+    msg.set_int(soupbintcp::login_accepted::SEQUENCE_NUMBER, requestedSeqNo);
+    msg.set_string(soupbintcp::login_accepted::SESSION, requestedSessionId);
+    send(msg.get_record_as_vec());
+    if (resend)
+    {
+        parent->repeat_from(this, requestedSeqNo);
     }
 }
 
@@ -47,10 +85,13 @@ void SoupBinConnection::do_connect(const boost::asio::ip::tcp::resolver::results
     boost::asio::async_connect(skt, endpoints, [this](boost::system::error_code ec, boost::asio::ip::tcp::endpoint) {
         if (!ec)
         {
+            status = Status::CONNECTED;
             // attempt login
             soupbintcp::login_request req;
             req.set_string(soupbintcp::login_request::USERNAME, username);
             req.set_string(soupbintcp::login_request::PASSWORD, password);
+            req.set_int(soupbintcp::login_request::REQUESTED_SEQUENCE_NUMBER, nextSeq);
+            req.set_string(soupbintcp::login_request::REQUESTED_SESSION, sessionId);
             send(req.get_record_as_vec());
             do_read_header();
         }
@@ -67,7 +108,7 @@ void SoupBinConnection::do_read_header()
                 }
                 else
                 {
-                    skt.close();
+                    close_socket();
                 }
             });
 }
@@ -127,10 +168,14 @@ void SoupBinConnection::do_read_body()
                         do_read_header();
                     }
                     else
-                        skt.close();
+                    {
+                        close_socket();
+                    }
                 }
                 else
-                    skt.close();
+                {
+                    close_socket();
+                }
             });
 }
 void SoupBinConnection::do_write()
@@ -142,7 +187,7 @@ void SoupBinConnection::do_write()
                     if (!write_msgs.empty())
                         do_write();
                 } else {
-                    skt.close();
+                    close_socket();
                 }
             });
 }
@@ -172,7 +217,9 @@ void SoupBinConnection::send(const std::vector<unsigned char>& bytes)
         boost::asio::async_write(skt, boost::asio::buffer(bytes.data(), bytes.size()), 
                 [this, bytes](boost::system::error_code ec, std::size_t /* length */) {
                     if (ec)
-                        skt.close();
+                    {
+                        close_socket();
+                    }
                 });
     }
     else
@@ -187,7 +234,12 @@ void SoupBinConnection::send(const std::vector<unsigned char>& bytes)
     }
 }
 
-uint64_t SoupBinConnection::get_next_seq() { return nextSeq++; }
+uint64_t SoupBinConnection::get_next_seq(bool increment) 
+{ 
+    if(!increment)
+        return nextSeq;
+    return nextSeq++; 
+}
 
 void SoupBinConnection::OnTimer(uint64_t msSince)
 {
