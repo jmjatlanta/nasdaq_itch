@@ -190,11 +190,11 @@ struct incoming_message
             case('+'):
             case('A'):
             case('J'):
-            case('S'):
+            case('S'): // sequenced_data
             case('H'):
             case('Z'):
             case('L'):
-            case('U'):
+            case('U'): // unsequenced
             case('R'):
             case('O'):
                 return true;

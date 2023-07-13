@@ -70,7 +70,7 @@ class SoupBinServer : public MessageRepeater
     {
         acceptor->async_accept([this](boost::system::error_code ec, boost::asio::ip::tcp::socket socket) {
             if (!ec)
-                connections.emplace_back(std::make_shared<CONNECTION>(std::move(socket), this));
+                connections.emplace_back(std::make_shared<CONNECTION>(std::move(socket), &io_context, this));
             if (!shuttingDown)
                 do_accept();
         });
