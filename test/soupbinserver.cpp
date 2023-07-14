@@ -124,8 +124,8 @@ TEST(SoupBinServer, OneClient)
     MySoupBinServer server(9012);
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
     MySoupBinClient client("127.0.0.1:9012", "test1", "password");
-    // wait 2.5 seconds
-    std::this_thread::sleep_for(std::chrono::milliseconds(2500));
+    // wait 1.5 seconds
+    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     // we should have sent 1 heartbeat request and received 1 heartbeat response
     EXPECT_EQ(server.GetNumClientHeartbeats(), 1);
     EXPECT_EQ(server.GetNumServerHeartbeats(), 0);

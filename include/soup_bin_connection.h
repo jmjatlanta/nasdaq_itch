@@ -37,7 +37,7 @@ class SoupBinConnection : public TimerListener
     /***
      * A connection from a client (this ctor used by a server
      */
-    SoupBinConnection(boost::asio::ip::tcp::socket skt, boost::asio::io_context* io_context, MessageRepeater* parent);
+    SoupBinConnection(boost::asio::ip::tcp::socket skt, MessageRepeater* parent);
     ~SoupBinConnection();
 
     /***
@@ -85,7 +85,6 @@ class SoupBinConnection : public TimerListener
     Timer heartbeatTimer; // fires off a heartbeat packet if nothing sent for 1 minute
     std::unordered_map<uint64_t, std::vector<unsigned char> > messages;
     boost::asio::io_context io_context;
-    boost::asio::io_context* server_context = nullptr;
     boost::asio::ip::tcp::socket skt;
     std::thread readerThread;
     bool shuttingDown = false;
