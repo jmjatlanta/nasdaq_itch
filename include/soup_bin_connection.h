@@ -58,7 +58,7 @@ class SoupBinConnection : public TimerListener
     protected:
     // these are called when messages come in
     virtual void on_debug(const soupbintcp::debug_packet& in) {}
-    virtual void on_login_accepted(const soupbintcp::login_accepted& in) {}
+    virtual void on_login_accepted(const soupbintcp::login_accepted& in) { status = Status::CONNECTED; }
     virtual void on_login_rejected(const soupbintcp::login_rejected& in) {}
     virtual void on_sequenced_data(const soupbintcp::sequenced_data& in) {}
     virtual void on_unsequenced_data(const soupbintcp::unsequenced_data&  in) {}
