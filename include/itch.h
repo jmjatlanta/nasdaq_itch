@@ -502,7 +502,7 @@ struct order_replace : public message<ORDER_REPLACE_LEN> {
     order_replace(const uint8_t* in) : message(in) {}
 };
 
-const static int8_t TRADE_LEN = 35;
+const static int8_t TRADE_LEN = 44;
 struct trade : public message<TRADE_LEN> {
     static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::ALPHA}; 
     static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::ALPHA}; 
