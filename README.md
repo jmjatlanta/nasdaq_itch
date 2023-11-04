@@ -1,6 +1,4 @@
-## Various pieces for NASDAQ ITCH, OUCH, and SoupBinTCP
-
-
+# Various pieces for NASDAQ ITCH, OUCH, and SoupBinTCP
 
 ## Simple header-only C++ objects for NASDAQ ITCH 5.0 protocol
 
@@ -34,7 +32,13 @@ or if you're the client taking in a feed:
     }
 ```
 
-TODO:
+## Simple header-only C++ objects for NASDAQ OUCH protocol
+- follows the same format as the ITCH protocol above (see `ouch.h`)
+
+## Also included
+- SoupBinTCP protocol (not header-only, see `soupbintcp.h` and the related `.cpp` files for the implementation)
+
+### TODO:
 - Test each object for their length
 - Test each object for their prefix
 - Test each field of each object for setting and retrieval
