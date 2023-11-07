@@ -408,7 +408,7 @@ struct add_order : public message<ADD_ORDER_LEN> {
  * The more common order notification
  */
 const static int8_t ADD_ORDER_WITH_MPID_LEN = 40;
-struct add_order_with_mpid : public message<ADD_ORDER_LEN> {
+struct add_order_with_mpid : public message<ADD_ORDER_WITH_MPID_LEN> {
     static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::ALPHA}; 
     static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::ALPHA}; 
     static constexpr message_record TRACKING_NUMBER{3, 2, message_record::field_type::INTEGER};
@@ -547,7 +547,7 @@ struct broken_trade : public message<BROKEN_TRADE_LEN> {
     broken_trade(const uint8_t* in) : message(in) {}
 };
 
-const static int8_t NOII_LEN = 19;
+const static int8_t NOII_LEN = 50;
 struct noii : public message<NOII_LEN> {
     static constexpr message_record MESSAGE_TYPE{0, 1, message_record::field_type::ALPHA}; 
     static constexpr message_record STOCK_LOCATE{1, 2, message_record::field_type::ALPHA}; 

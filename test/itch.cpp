@@ -1,6 +1,8 @@
 #include "itch.h"
 #include <gtest/gtest.h>
 #include <sstream>
+#include <fstream>
+#include <filesystem>
 
 TEST(itch, test1)
 {
@@ -58,4 +60,105 @@ TEST(itch, largeNumbers)
     const uint8_t* record = msg.get_record();
     int32_t price2 = msg.get_int(itch::add_order::PRICE);
     EXPECT_EQ(price1, price2);
+}
+
+TEST(itch, DISABLED_parseFile)
+{
+    std::string fileName = "/media/jmjatlanta/ExtraDrive1/Development/cpp/ITCHData/01302020.NASDAQ_ITCH50";
+    EXPECT_TRUE(std::filesystem::exists(fileName));
+    std::ifstream in(fileName.c_str(), std::ios::binary | std::ios_base::in);
+    if ( (in.rdstate() & std::ifstream::failbit) != 0)
+    {
+        std::cerr << "Unable to read file " << fileName << ": opening failed\n";
+        FAIL();
+    }
+    std::vector<char> types{'S', 'R', 'H', 'Y', 'L', 'V', 'W', 
+            'K', 'J', 'h', 'A', 'F', 'E', 'C', 'X', 'D', 'U', 
+            'P', 'Q',  'B', 'I', 'N', 'O'};
+    std::vector<int> sizes{ 
+            itch::system_event().get_size(),  // S
+            itch::stock_directory().get_size(), // R
+            itch::stock_trading_action().get_size(), // H
+            itch::reg_sho_restriction().get_size(), // Y
+            itch::market_participant_position().get_size(), // L
+            itch::mwcp_decline_level().get_size(), // V
+            itch::mwcp_status().get_size(), // W
+            itch::ipo_quoting_period_update().get_size(), // K
+            itch::luld_auction_collar().get_size(), // J
+            itch::operational_halt().get_size(), // h
+            itch::add_order().get_size(), // A
+            itch::add_order_with_mpid().get_size(), // F
+            itch::order_executed().get_size(), // E
+            itch::order_executed_with_price().get_size(), // C
+            itch::order_cancel().get_size(), // X
+            itch::order_delete().get_size(), // D
+            itch::order_replace().get_size(), // U
+            itch::trade().get_size(), // P
+            itch::cross_trade().get_size(), // Q
+            itch::broken_trade().get_size(), // B
+            itch::noii().get_size(), // I
+            itch::rpii().get_size(), // N
+            itch::direct_listing_with_capital_raise_price_discovery().get_size()
+    };
+    std::map<char, int> record_sizes; // stores the record size for each type
+    size_t max_size = 0;
+    for(int i = 0; i < types.size(); ++i)
+    {
+        size_t curr_size = sizes[i];
+        record_sizes[types[i]] = curr_size;
+        if (curr_size > max_size)
+            max_size = curr_size;
+    }
+    std::map<char, int> counts;
+    // grab first character and then the rest of the record
+    char* buf = (char*) malloc(max_size);
+    char record_type;
+    uint64_t record_number = 0;
+    uint16_t incoming_size = 0;
+    while(true)
+    {
+        in.read((char*)&incoming_size, 2);
+        if ( (in.rdstate() & std::ifstream::eofbit) != 0)
+            break;
+        if ( (in.rdstate() & std::ifstream::failbit) != 0)
+        {
+            std::cerr << "Unable to read record " << record_number << ": reading of record size failed\n";
+            FAIL();
+        }
+        incoming_size = itch::swap_endian_bytes(incoming_size);
+        in.read(&record_type, 1);
+        if ( (in.rdstate() & std::ifstream::eofbit) != 0)
+            break;
+        if ( (in.rdstate() & std::ifstream::failbit) != 0)
+        {
+            std::cerr << "Unable to read record " << record_number << ": reading of record type failed\n";
+            FAIL();
+        }
+        if (record_sizes.find(record_type) == record_sizes.end())
+        {
+            std::cerr << "Unable to read record " << record_number << ": Invalid record type " << record_type << std::endl;
+            FAIL();
+        }
+        if (record_sizes[record_type] != incoming_size)
+        {
+            std::cerr << "Size mismatch on record " << record_number << ": They say " << incoming_size << " and we say " 
+                    << record_sizes[record_type] << " for record type " << record_type << "\n";
+            FAIL();
+        }
+        counts[record_type]++;
+        in.read(buf, incoming_size - 1);
+        if ( (in.rdstate() & std::ifstream::eofbit) != 0)
+            break;
+        if ( (in.rdstate() & std::ifstream::failbit) != 0)
+        {
+            std::cerr << "Unable to read record " << record_number << ": reading of record failed\n";
+            FAIL();
+        }
+        record_number++;
+    }
+    for(auto& i : counts)
+    {
+        std::cout << "Record " << i.first << ": " << i.second << "\n";
+    }
+    free(buf);
 }
